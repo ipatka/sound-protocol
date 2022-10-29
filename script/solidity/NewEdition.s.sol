@@ -16,8 +16,6 @@ import { RangeEditionMinter } from "@modules/RangeEditionMinter.sol";
 import { EditionMaxMinter } from "@modules/EditionMaxMinter.sol";
 import { RarityShuffleMetadata } from "@modules/RarityShuffleMetadata.sol";
 
-import { Merkle } from "murky/Merkle.sol";
-
 contract NewEdition is Script {
     address private OWNER = vm.envAddress("OWNER");
     address private SOUND_CREATOR = vm.envAddress("SOUND_CREATOR");
@@ -27,12 +25,9 @@ contract NewEdition is Script {
     uint8 public constant MINT_RANDOMNESS_ENABLED_FLAG = 1 << 1;
     uint8 public constant METADATA_TRIGGER_ENABLED_FLAG = 1 << 2;
 
-    bytes32[] leaves;
 
-    bytes32 public root;
+    bytes32 public root = 0x300553b4ba80acf94444e931c71e13c74335ca9a131aaba39339ef7aa8cc8ca3;
 
-    Merkle public m;
-    address[] accounts = [0x744222844bFeCC77156297a6427B5876A6769e19, 0x5AAF1550C05EcF287F51954E263b9a44D0557617, 0x01B2f8877f3e8F366eF4D4F48230949123733897]; // TODO populate
 
     uint256 internal _salt = 2;
 
@@ -44,18 +39,6 @@ contract NewEdition is Script {
     string constant CONTRACT_URI = "https://example.com/storefront/";
     uint16 constant ROYALTY_BPS = 100;
     uint8 constant FLAGS = MINT_RANDOMNESS_ENABLED_FLAG | METADATA_TRIGGER_ENABLED_FLAG;
-
-    function setUpMerkleTree() public {
-        // Initialize
-        m = new Merkle();
-
-        leaves = new bytes32[](accounts.length);
-        for (uint256 i = 0; i < accounts.length; ++i) {
-            leaves[i] = keccak256(abi.encodePacked(accounts[i]));
-        }
-
-        root = m.getRoot(leaves);
-    }
 
     function run() external {
         vm.startBroadcast();
@@ -109,10 +92,10 @@ contract NewEdition is Script {
 
         // soundCreator.createSoundAndMints(bytes32(_salt), initData, contracts, data);
         (address addr, ) = soundCreator.soundEditionAddress(OWNER, bytes32(_salt));
-        // SoundEditionV1a edition = SoundEditionV1a(addr);
+        SoundEditionV1a edition = SoundEditionV1a(addr);
         
         // edition.grantRoles(address(minter), edition.MINTER_ROLE());
-        // edition.grantRoles(address(merkleMinter), edition.MINTER_ROLE());
+        edition.grantRoles(address(merkleMinter), edition.MINTER_ROLE());
         // edition.grantRoles(address(rangeMinter), edition.MINTER_ROLE());
         
         // minter.createEditionMint(
@@ -127,28 +110,28 @@ contract NewEdition is Script {
         // setUpMerkleTree();
         
         
-        // merkleMinter.createEditionMint(
-        //   addr,
-        //   root,
-        //   0.0008 ether,
-        //   uint32(block.timestamp),
-        //   uint32(block.timestamp + 30 days),
-        //   0,
-        //   888,
-        //   100
-        // );
-        
-        rangeMinter.createEditionMint(
+        merkleMinter.createEditionMint(
           addr,
+          root,
           0.0008 ether,
           uint32(block.timestamp),
-          uint32(block.timestamp + 29 days),
           uint32(block.timestamp + 30 days),
           0,
           888,
-          888,
           100
         );
+        
+        // rangeMinter.createEditionMint(
+        //   addr,
+        //   0.0008 ether,
+        //   uint32(block.timestamp),
+        //   uint32(block.timestamp + 29 days),
+        //   uint32(block.timestamp + 30 days),
+        //   0,
+        //   888,
+        //   888,
+        //   100
+        // );
 
 
         vm.stopBroadcast();
