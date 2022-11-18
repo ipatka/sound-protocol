@@ -4,21 +4,20 @@ pragma solidity ^0.8.16;
 
 import { IERC165 } from "openzeppelin/utils/introspection/IERC165.sol";
 import { ISoundFeeRegistry } from "@core/interfaces/ISoundFeeRegistry.sol";
-import { IAlbumRedemptionMinter, MintData, MintInfo } from "./interfaces/IAlbumRedemptionMinter.sol";
+import { IRedemptionMinter, MintData, MintInfo } from "./interfaces/IRedemptionMinter.sol";
 import { BaseMinter } from "./BaseMinter.sol";
 import { IMinterModule } from "@core/interfaces/IMinterModule.sol";
 import { ISoundEditionV1, EditionInfo } from "@core/interfaces/ISoundEditionV1.sol";
-import { IRarityShuffleMetadata } from "./interfaces/IRarityShuffleMetadata.sol";
 import { IERC721ABurnableUpgradeable } from "chiru-labs/ERC721A-Upgradeable/extensions/ERC721ABurnableUpgradeable.sol";
 
 error LogAddys(address a, address b);
 
 /*
- * @title EditionMaxMinter
- * @notice Module for unpermissioned mints of Sound editions.
+ * @title RedemptionMinter
+ * @notice Module for minting secret songs by burning other songs
  * @author Sound.xyz
  */
-contract AlbumRedemptionMinter is IAlbumRedemptionMinter, BaseMinter {
+contract RedemptionMinter is IRedemptionMinter, BaseMinter {
     // =============================================================
     //                            STORAGE
     // =============================================================
@@ -40,11 +39,11 @@ contract AlbumRedemptionMinter is IAlbumRedemptionMinter, BaseMinter {
     // =============================================================
 
     /**
-     * @inheritdoc IAlbumRedemptionMinter
+     * @inheritdoc IRedemptionMinter
      */
-    function createAlbumRedemptionMint(
+    function createRedemptionMint(
         address songEdition,
-        address albumEdition,
+        address secretEdition,
         uint32 requiredRedemptions,
         uint32 startTime,
         uint32 endTime,
@@ -52,16 +51,16 @@ contract AlbumRedemptionMinter is IAlbumRedemptionMinter, BaseMinter {
     ) public returns (uint128 mintId) {
         if (maxMintablePerAccount == 0) revert MaxMintablePerAccountIsZero();
 
-        mintId = _createEditionMint(albumEdition, startTime, endTime, 0);
+        mintId = _createEditionMint(secretEdition, startTime, endTime, 0);
 
-        MintData storage data = _mintData[albumEdition][mintId];
+        MintData storage data = _mintData[secretEdition][mintId];
         data.maxMintablePerAccount = maxMintablePerAccount;
         data.requiredRedemptions = requiredRedemptions;
         data.redemptionContract = songEdition;
 
         // prettier-ignore
-        emit AlbumRedemptionMintCreated(
-            albumEdition,
+        emit RedemptionMintCreated(
+            secretEdition,
             mintId,
             songEdition,
             requiredRedemptions,
@@ -72,21 +71,18 @@ contract AlbumRedemptionMinter is IAlbumRedemptionMinter, BaseMinter {
     }
 
     /**
-     * @inheritdoc IAlbumRedemptionMinter
+     * @inheritdoc IRedemptionMinter
      */
     function mint(
         address edition,
-        address redemptionContract,
         uint128 mintId,
         uint256[] calldata tokenIds
     ) public {
         MintData storage data = _mintData[edition][mintId];
         
         ISoundEditionV1 _songEdition = ISoundEditionV1(data.redemptionContract);
-        IRarityShuffleMetadata _meta = IRarityShuffleMetadata(_songEdition.metadataModule());
         
         for (uint256 index = 0; index < data.requiredRedemptions; index++) {
-          if (_meta.getShuffledTokenId(tokenIds[index]) != (index + 1)) revert InvalidTokenForRedemption(_meta.getShuffledTokenId(tokenIds[index]), (index + 1), index, tokenIds[index]);
           if (_songEdition.ownerOf(tokenIds[index]) != msg.sender) revert OfferedTokenNotOwned();
           
           IERC721ABurnableUpgradeable(address(_songEdition)).burn(tokenIds[index]); /*Will revert if contract is not approved*/
@@ -105,7 +101,7 @@ contract AlbumRedemptionMinter is IAlbumRedemptionMinter, BaseMinter {
 
 
     /**
-     * @inheritdoc IAlbumRedemptionMinter
+     * @inheritdoc IRedemptionMinter
      */
     function setMaxMintablePerAccount(
         address edition,
@@ -137,7 +133,7 @@ contract AlbumRedemptionMinter is IAlbumRedemptionMinter, BaseMinter {
     }
 
     /**
-     * @inheritdoc IAlbumRedemptionMinter
+     * @inheritdoc IRedemptionMinter
      */
     function mintInfo(address edition, uint128 mintId) external view returns (MintInfo memory info) {
         BaseData memory baseData = _baseData[edition][mintId];
@@ -159,13 +155,13 @@ contract AlbumRedemptionMinter is IAlbumRedemptionMinter, BaseMinter {
      * @inheritdoc IERC165
      */
     function supportsInterface(bytes4 interfaceId) public view override(IERC165, BaseMinter) returns (bool) {
-        return BaseMinter.supportsInterface(interfaceId) || interfaceId == type(IAlbumRedemptionMinter).interfaceId;
+        return BaseMinter.supportsInterface(interfaceId) || interfaceId == type(IRedemptionMinter).interfaceId;
     }
 
     /**
      * @inheritdoc IMinterModule
      */
     function moduleInterfaceId() public pure returns (bytes4) {
-        return type(IAlbumRedemptionMinter).interfaceId;
+        return type(IRedemptionMinter).interfaceId;
     }
 }

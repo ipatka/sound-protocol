@@ -37,7 +37,7 @@ struct MintInfo {
  * @dev Interface for the `EditionMaxMinter` module.
  * @author Sound.xyz
  */
-interface IAlbumRedemptionMinter is IMinterModule {
+interface IRedemptionMinter is IMinterModule {
     // =============================================================
     //                            EVENTS
     // =============================================================
@@ -51,7 +51,7 @@ interface IAlbumRedemptionMinter is IMinterModule {
      * @param endTime               End timestamp of sale (in seconds since unix epoch).
      * @param maxMintablePerAccount The maximum number of tokens that can be minted per account.
      */
-    event AlbumRedemptionMintCreated(
+    event RedemptionMintCreated(
         address indexed edition,
         uint128 indexed mintId,
         address redemptionContract,
@@ -79,10 +79,6 @@ interface IAlbumRedemptionMinter is IMinterModule {
      */
     error ExceedsMaxPerAccount();
 
-    /**
-     * @dev The token offered for redemption does not match expected shuffle ID
-     */
-    error InvalidTokenForRedemption(uint256 offeredToken, uint256 expectedToken, uint256 index, uint256 id);
 
     /**
      * @dev The token offered for redemption is not owned by message sender
@@ -101,16 +97,16 @@ interface IAlbumRedemptionMinter is IMinterModule {
     /*
      * @dev Initializes a range mint instance
      * @param songEdition           Address of the song edition contract we are redeeming from
-     * @param albumEdition          Address of the album edition contract we are minting for.
+     * @param secretEdition          Address of the album edition contract we are minting for.
      * @param startTime             Start timestamp of sale (in seconds since unix epoch).
      * @param endTime               End timestamp of sale (in seconds since unix epoch).
      * @param requiredRedemptions   Amount of unique tokens to burn for album.
      * @param maxMintablePerAccount The maximum number of tokens that can be minted by an account.
      * @return mintId The ID for the new mint instance.
      */
-    function createAlbumRedemptionMint(
+    function createRedemptionMint(
         address songEdition,
-        address albumEdition,
+        address secretEdition,
         uint32 startTime,
         uint32 endTime,
         uint32 requiredRedemptions,
@@ -126,7 +122,6 @@ interface IAlbumRedemptionMinter is IMinterModule {
      */
     function mint(
         address edition,
-        address redemptionContract,
         uint128 mintId,
         uint256[] calldata tokenIds
     ) external;
