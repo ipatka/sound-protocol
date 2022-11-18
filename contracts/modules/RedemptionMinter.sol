@@ -79,13 +79,13 @@ contract RedemptionMinter is IRedemptionMinter, BaseMinter {
         uint256[] calldata tokenIds
     ) public {
         MintData storage data = _mintData[edition][mintId];
-        
+
         ISoundEditionV1 _songEdition = ISoundEditionV1(data.redemptionContract);
-        
+
         for (uint256 index = 0; index < data.requiredRedemptions; index++) {
-          if (_songEdition.ownerOf(tokenIds[index]) != msg.sender) revert OfferedTokenNotOwned();
-          
-          IERC721ABurnableUpgradeable(address(_songEdition)).burn(tokenIds[index]); /*Will revert if contract is not approved*/
+            if (_songEdition.ownerOf(tokenIds[index]) != msg.sender) revert OfferedTokenNotOwned();
+
+            IERC721ABurnableUpgradeable(address(_songEdition)).burn(tokenIds[index]); /*Will revert if contract is not approved*/
         }
 
         unchecked {
@@ -98,7 +98,6 @@ contract RedemptionMinter is IRedemptionMinter, BaseMinter {
 
         _mint(edition, mintId, 1, address(0));
     }
-
 
     /**
      * @inheritdoc IRedemptionMinter

@@ -96,7 +96,6 @@ contract RarityShuffleMetadata is IRarityShuffleMetadata {
         return bytes(baseURI).length != 0 ? string.concat(baseURI, LibString.toString(shuffledTokenId)) : "";
     }
 
-
     /// @notice Query shuffled & bucketed tokenID given an offset
     /// @dev Uses offset ID with rarity ranges to return edition ID. BST modified from Compound governance getPriorVotes
     /// @param _offset TokenID with offset
