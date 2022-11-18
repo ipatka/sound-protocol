@@ -9,7 +9,9 @@ import { SoundEditionV1 } from "@core/SoundEditionV1.sol";
 import { SoundFeeRegistry } from "@core/SoundFeeRegistry.sol";
 import { IMetadataModule } from "@core/interfaces/IMetadataModule.sol";
 import { MockSoundEditionV1a } from "./mocks/MockSoundEditionV1a.sol";
+import { MockSoundEditionV1 } from "./mocks/MockSoundEditionV1.sol";
 import { RarityShuffleMetadata } from "@modules/RarityShuffleMetadata.sol";
+import { MockRarityShuffleMetadata } from "./mocks/MockRarityShuffleMetadata.sol";
 
 contract TestConfig is Test {
     // From ISoundEditionVI.
@@ -73,7 +75,8 @@ contract TestConfig is Test {
         (address predictedSoundAddress,) = soundCreator.soundEditionAddress(address(this), bytes32(++_salt));
 
 
-        RarityShuffleMetadata module = new RarityShuffleMetadata(
+        // RarityShuffleMetadata module = new RarityShuffleMetadata(
+        MockRarityShuffleMetadata module = new MockRarityShuffleMetadata(
           predictedSoundAddress,
           300,
           6,
@@ -141,4 +144,33 @@ contract TestConfig is Test {
                 )
             );
     }
+    
+    function createEditionWithNoModule() public returns (SoundEditionV1) {
+        MockSoundEditionV1 soundEditionImplementation = new MockSoundEditionV1();
+
+        SoundCreatorV1 soundCreatorB = new SoundCreatorV1(address(soundEditionImplementation));
+        
+        address[] memory contracts;
+        bytes[] memory data;
+
+        bytes memory initData = abi.encodeWithSelector(
+            SoundEditionV1.initialize.selector,
+                    SONG_NAME,
+                    SONG_SYMBOL,
+                    address(0),
+                    BASE_URI,
+                    CONTRACT_URI,
+                    FUNDING_RECIPIENT,
+                    ROYALTY_BPS,
+                    EDITION_MAX_MINTABLE,
+                    EDITION_MAX_MINTABLE,
+                    EDITION_CUTOFF_TIME,
+                    FLAGS
+        );
+
+        soundCreatorB.createSoundAndMints(bytes32(++_salt), initData, contracts, data);
+        (address addr, ) = soundCreatorB.soundEditionAddress(address(this), bytes32(_salt));
+        return SoundEditionV1(payable(addr));
+    }
+
 }

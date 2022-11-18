@@ -11,6 +11,8 @@ import { ISoundEditionV1, EditionInfo } from "@core/interfaces/ISoundEditionV1.s
 import { IRarityShuffleMetadata } from "./interfaces/IRarityShuffleMetadata.sol";
 import { IERC721ABurnableUpgradeable } from "chiru-labs/ERC721A-Upgradeable/extensions/ERC721ABurnableUpgradeable.sol";
 
+error LogAddys(address a, address b);
+
 /*
  * @title EditionMaxMinter
  * @notice Module for unpermissioned mints of Sound editions.
@@ -41,7 +43,8 @@ contract AlbumRedemptionMinter is IAlbumRedemptionMinter, BaseMinter {
      * @inheritdoc IAlbumRedemptionMinter
      */
     function createAlbumRedemptionMint(
-        address edition,
+        address songEdition,
+        address albumEdition,
         uint32 requiredRedemptions,
         uint32 startTime,
         uint32 endTime,
@@ -49,16 +52,18 @@ contract AlbumRedemptionMinter is IAlbumRedemptionMinter, BaseMinter {
     ) public returns (uint128 mintId) {
         if (maxMintablePerAccount == 0) revert MaxMintablePerAccountIsZero();
 
-        mintId = _createEditionMint(edition, startTime, endTime, 0);
+        mintId = _createEditionMint(albumEdition, startTime, endTime, 0);
 
-        MintData storage data = _mintData[edition][mintId];
+        MintData storage data = _mintData[albumEdition][mintId];
         data.maxMintablePerAccount = maxMintablePerAccount;
         data.requiredRedemptions = requiredRedemptions;
+        data.redemptionContract = songEdition;
 
         // prettier-ignore
         emit AlbumRedemptionMintCreated(
-            edition,
+            albumEdition,
             mintId,
+            songEdition,
             requiredRedemptions,
             startTime,
             endTime,
@@ -71,19 +76,20 @@ contract AlbumRedemptionMinter is IAlbumRedemptionMinter, BaseMinter {
      */
     function mint(
         address edition,
+        address redemptionContract,
         uint128 mintId,
         uint256[] calldata tokenIds
     ) public {
         MintData storage data = _mintData[edition][mintId];
         
-        ISoundEditionV1 _edition = ISoundEditionV1(edition);
-        IRarityShuffleMetadata _meta = IRarityShuffleMetadata(_edition.metadataModule());
+        ISoundEditionV1 _songEdition = ISoundEditionV1(data.redemptionContract);
+        IRarityShuffleMetadata _meta = IRarityShuffleMetadata(_songEdition.metadataModule());
         
         for (uint256 index = 0; index < data.requiredRedemptions; index++) {
-          if (_meta.getShuffledTokenId(tokenIds[index]) != (index + 1)) revert InvalidTokenForRedemption();
-          if (_edition.ownerOf(tokenIds[index]) != msg.sender) revert OfferedTokenNotOwned();
+          if (_meta.getShuffledTokenId(tokenIds[index]) != (index + 1)) revert InvalidTokenForRedemption(_meta.getShuffledTokenId(tokenIds[index]), (index + 1), index, tokenIds[index]);
+          if (_songEdition.ownerOf(tokenIds[index]) != msg.sender) revert OfferedTokenNotOwned();
           
-          IERC721ABurnableUpgradeable(edition).burn(tokenIds[index]); /*Will revert if contract is not approved*/
+          IERC721ABurnableUpgradeable(address(_songEdition)).burn(tokenIds[index]); /*Will revert if contract is not approved*/
         }
 
         unchecked {
@@ -143,6 +149,7 @@ contract AlbumRedemptionMinter is IAlbumRedemptionMinter, BaseMinter {
         info.endTime = baseData.endTime;
         info.mintPaused = baseData.mintPaused;
         info.requiredRedemptions = mintData.requiredRedemptions;
+        info.redemptionContract = mintData.redemptionContract;
         info.maxMintableLower = editionInfo.editionMaxMintableLower;
         info.maxMintableUpper = editionInfo.editionMaxMintableUpper;
         info.cutoffTime = editionInfo.editionCutoffTime;

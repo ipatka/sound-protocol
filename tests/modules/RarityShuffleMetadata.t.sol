@@ -64,7 +64,7 @@ contract RarityShuffleMetadataTests is Test{
     }
     
     function test_bst(uint256 offset) public {
-        uint256 shuffleId = module.getShuffledTokenId(offset);
+        uint256 shuffleId = module.getBucketByOffset(offset);
         assertTrue(shuffleId <= 6);
         
         if (offset < 10) assertEq(shuffleId, 1);
@@ -109,7 +109,7 @@ contract RarityShuffleMetadataTests is Test{
         
           usedOffset[offset] = Offset(true, index);
         
-        uint256 shuffleId = module.getShuffledTokenId(offset);
+        uint256 shuffleId = module.getBucketByOffset(offset);
         assertTrue(shuffleId <= 6);
         
         if (offset < 10) assertEq(shuffleId, 1);

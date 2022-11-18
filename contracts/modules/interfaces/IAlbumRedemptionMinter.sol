@@ -7,6 +7,8 @@ import { IMinterModule } from "@core/interfaces/IMinterModule.sol";
  * @dev Data unique to a edition max mint.
  */
 struct MintData {
+    // The contract to redeem tokens from
+    address redemptionContract;
     // The number of unique tokens required to burn to redeem album
     uint32 requiredRedemptions;
     // The maximum number of tokens that a wallet can mint.
@@ -23,6 +25,7 @@ struct MintInfo {
     bool mintPaused;
     // uint96 price;
     uint32 maxMintablePerAccount;
+    address redemptionContract;
     uint32 requiredRedemptions;
     uint32 maxMintableLower;
     uint32 maxMintableUpper;
@@ -51,6 +54,7 @@ interface IAlbumRedemptionMinter is IMinterModule {
     event AlbumRedemptionMintCreated(
         address indexed edition,
         uint128 indexed mintId,
+        address redemptionContract,
         uint32 requiredRedemptions,
         uint32 startTime,
         uint32 endTime,
@@ -78,7 +82,7 @@ interface IAlbumRedemptionMinter is IMinterModule {
     /**
      * @dev The token offered for redemption does not match expected shuffle ID
      */
-    error InvalidTokenForRedemption();
+    error InvalidTokenForRedemption(uint256 offeredToken, uint256 expectedToken, uint256 index, uint256 id);
 
     /**
      * @dev The token offered for redemption is not owned by message sender
@@ -96,7 +100,8 @@ interface IAlbumRedemptionMinter is IMinterModule {
 
     /*
      * @dev Initializes a range mint instance
-     * @param edition               Address of the song edition contract we are minting for.
+     * @param songEdition           Address of the song edition contract we are redeeming from
+     * @param albumEdition          Address of the album edition contract we are minting for.
      * @param startTime             Start timestamp of sale (in seconds since unix epoch).
      * @param endTime               End timestamp of sale (in seconds since unix epoch).
      * @param requiredRedemptions   Amount of unique tokens to burn for album.
@@ -104,7 +109,8 @@ interface IAlbumRedemptionMinter is IMinterModule {
      * @return mintId The ID for the new mint instance.
      */
     function createAlbumRedemptionMint(
-        address edition,
+        address songEdition,
+        address albumEdition,
         uint32 startTime,
         uint32 endTime,
         uint32 requiredRedemptions,
@@ -120,6 +126,7 @@ interface IAlbumRedemptionMinter is IMinterModule {
      */
     function mint(
         address edition,
+        address redemptionContract,
         uint128 mintId,
         uint256[] calldata tokenIds
     ) external;

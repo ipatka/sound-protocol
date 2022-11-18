@@ -96,11 +96,12 @@ contract RarityShuffleMetadata is IRarityShuffleMetadata {
         return bytes(baseURI).length != 0 ? string.concat(baseURI, LibString.toString(shuffledTokenId)) : "";
     }
 
-    /// @notice Query shuffled & bucketed tokenID
+
+    /// @notice Query shuffled & bucketed tokenID given an offset
     /// @dev Uses offset ID with rarity ranges to return edition ID. BST modified from Compound governance getPriorVotes
     /// @param _offset TokenID with offset
     /// @return uint256 of edition ID
-    function getShuffledTokenId(uint256 _offset) public view returns (uint256) {
+    function getBucketByOffset(uint256 _offset) public view returns (uint256) {
         uint256 lower = 0;
         uint256 upper = nRanges - 1;
         while (upper > lower) {
@@ -112,5 +113,13 @@ contract RarityShuffleMetadata is IRarityShuffleMetadata {
             else upper = center - 1;
         }
         return lower + 1;
+    }
+
+    /// @notice Query shuffled & bucketed tokenID
+    /// @dev Uses offset ID with rarity ranges to return edition ID. BST modified from Compound governance getPriorVotes
+    /// @param tokenId Token to query
+    /// @return uint256 of shuffled Id
+    function getShuffledTokenId(uint256 tokenId) public view returns (uint256) {
+        return getBucketByOffset(offsets[tokenId]);
     }
 }
