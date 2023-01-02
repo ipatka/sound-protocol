@@ -43,7 +43,7 @@ contract SoundEditionV1a is ISoundEditionV1a, SoundEditionV1 {
     // =============================================================
 
     /**
-     * @dev The boolean flag on whether the `mintRandomness` is enabled.
+     * @dev The boolean flag on whether the `metadata trigger` is enabled.
      */
     uint8 public constant METADATA_TRIGGER_ENABLED_FLAG = 1 << 2;
 

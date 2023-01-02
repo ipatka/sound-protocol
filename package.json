@@ -15,6 +15,7 @@
         "deployv1a:goerli": "EVM_NETWORK=goerli source .env && forge script script/solidity/Deployv1a.s.sol --fork-url $GOERLI_RPC_URL --private-key $PRIVATE_KEY --verify --etherscan-api-key $ETHERSCAN_KEY -vvvv --broadcast",
         "newedition:goerli": "EVM_NETWORK=goerli source .env && forge script script/solidity/NewEdition.s.sol --fork-url $GOERLI_RPC_URL --private-key $PRIVATE_KEY --verify --etherscan-api-key $ETHERSCAN_KEY -vvvv --broadcast",
         "gen:ids": "forge script ./script/solidity/GetInterfaceId.s.sol | tr -d '\n' | grep -o '== Logs ==.*' | awk -F'== Logs ==' '/== Logs ==/{print $2}' | tr -d '[:space:]' > src/json/interfaceIds.json && bob-tsm script/js/buildInterfaceIdsFile.ts  && pnpm prettier:write",
+        "gen:metadata": "bob-tsm script/js/generate-metadata.ts && bob-tsm script/js/generate-collection-metadata.ts",
         "postinstall": "forge install",
         "prepack": "rm -rf out out-2 dist typechain && pnpm gen:ids && pnpm build && cp -r out out-2 && rm -rf ./out-2/test.sol && rm -rf ./out-2/*.t.sol && rm -rf ./out-2/Mock*.sol && find ./out-2 -name '*.metadata.json' -delete && pnpm run typechain && bob-tsm build.ts",
         "prep-release": "bob-tsm script/js/buildInterfaceIdsFile.ts && bob-tsm script/js/buildAddressJsonFile.ts && pnpm prettier:write",
@@ -37,6 +38,7 @@
     "dependencies": {
         "@ethersproject/abi": "^5.6.4",
         "@ethersproject/providers": "^5.6.8",
+        "@fast-csv/parse": "^4.3.6",
         "ethers": "^5.6.9"
     },
     "devDependencies": {

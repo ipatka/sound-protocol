@@ -42,6 +42,7 @@ contract RarityShuffleMetadata is IRarityShuffleMetadata {
             ranges.push(_ranges[index]); /*Populate the rarity table*/
             _currentMax = _ranges[index];
         }
+        nextIndex = 1; /*start counting at 1*/
         emit NewModuleCreated(_edition, address(this));
     }
 
@@ -90,9 +91,8 @@ contract RarityShuffleMetadata is IRarityShuffleMetadata {
     /// @param tokenId Token to query
     /// @return string of tokenURI
     function tokenURI(uint256 tokenId) external view returns (string memory) {
-        uint256 _offset = offsets[tokenId];
-        uint256 shuffledTokenId = getShuffledTokenId(_offset);
-        string memory baseURI = ISoundEditionV1a(msg.sender).baseURI();
+        uint256 shuffledTokenId = getShuffledTokenId(tokenId);
+        string memory baseURI = ISoundEditionV1a(edition).baseURI();
         return bytes(baseURI).length != 0 ? string.concat(baseURI, LibString.toString(shuffledTokenId)) : "";
     }
 

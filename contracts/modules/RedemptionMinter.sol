@@ -10,8 +10,6 @@ import { IMinterModule } from "@core/interfaces/IMinterModule.sol";
 import { ISoundEditionV1, EditionInfo } from "@core/interfaces/ISoundEditionV1.sol";
 import { IERC721ABurnableUpgradeable } from "chiru-labs/ERC721A-Upgradeable/extensions/ERC721ABurnableUpgradeable.sol";
 
-error LogAddys(address a, address b);
-
 /*
  * @title RedemptionMinter
  * @notice Module for minting secret songs by burning other songs
