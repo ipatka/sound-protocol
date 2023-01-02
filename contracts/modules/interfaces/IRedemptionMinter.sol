@@ -86,6 +86,11 @@ interface IRedemptionMinter is IMinterModule {
     error OfferedTokenNotOwned();
 
     /**
+     * @dev The array of tokens is not the right length
+     */
+    error InvalidNumberOfTokensOffered();
+
+    /**
      * @dev The max mintable per account cannot be zero.
      */
     error MaxMintablePerAccountIsZero();
