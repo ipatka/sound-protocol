@@ -77,7 +77,7 @@ contract RedemptionMinter is IRedemptionMinter, BaseMinter {
         uint256[] calldata tokenIds
     ) public {
         MintData storage data = _mintData[edition][mintId];
-        
+
         if (tokenIds.length != data.requiredRedemptions) revert InvalidNumberOfTokensOffered();
 
         ISoundEditionV1 _songEdition = ISoundEditionV1(data.redemptionContract);
